@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>QuickDrop Upload</title>
+    <title>Secure Upload</title>
     <style>
         * {
             margin: 0;
@@ -39,12 +39,6 @@
         h1 {
             color: #2d3748;
             font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 14px;
             margin-bottom: 30px;
         }
 
@@ -233,8 +227,7 @@
 <body>
     <div class="container">
         <div class="logo">📤</div>
-        <h1>QuickDrop Upload</h1>
-        <p class="subtitle">Upload your file securely to Serina</p>
+        <h1>Secure File Upload</h1>
 
         <div class="status-message" id="statusMessage"></div>
 
@@ -262,7 +255,7 @@
         <button class="btn btn-secondary" id="resetBtn" style="display: none;">Upload Another File</button>
 
         <div class="footer">
-            🔒 Encrypted end-to-end • Link expires in 3-5 minutes
+            🔒 Secure encrypted upload
         </div>
     </div>
 
@@ -282,25 +275,22 @@
         let selectedFile = null;
         let uploadUrl = null;
 
-        // Get presigned URL from query parameter
         function getUploadUrl() {
             const params = new URLSearchParams(window.location.search);
             return params.get('url');
         }
 
-        // Initialize
         window.addEventListener('DOMContentLoaded', () => {
             uploadUrl = getUploadUrl();
 
             if (!uploadUrl) {
-                showStatus('⚠️ No upload URL provided. Get a link from Serina first!', 'warning');
+                showStatus('No upload URL provided', 'warning');
                 uploadBtn.disabled = true;
                 uploadArea.style.pointerEvents = 'none';
                 uploadArea.style.opacity = '0.5';
             }
         });
 
-        // Format file size
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -309,25 +299,21 @@
             return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
-        // Show status message
         function showStatus(message, type) {
             statusMessage.textContent = message;
             statusMessage.className = `status-message show status-${type}`;
         }
 
-        // Hide status message
         function hideStatus() {
             statusMessage.className = 'status-message';
         }
 
-        // Upload area click
         uploadArea.addEventListener('click', () => {
             if (uploadUrl) {
                 fileInput.click();
             }
         });
 
-        // Drag and drop handlers
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -346,14 +332,12 @@
             }
         });
 
-        // File selection handler
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 handleFile(e.target.files[0]);
             }
         });
 
-        // Handle selected file
         function handleFile(file) {
             selectedFile = file;
             fileName.textContent = `📄 ${file.name}`;
@@ -364,7 +348,6 @@
             hideStatus();
         }
 
-        // Upload button click
         uploadBtn.addEventListener('click', async () => {
             if (!selectedFile || !uploadUrl) return;
 
@@ -376,7 +359,6 @@
             try {
                 const xhr = new XMLHttpRequest();
 
-                // Progress tracking
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
                         const percentComplete = (e.loaded / e.total) * 100;
@@ -385,38 +367,34 @@
                     }
                 });
 
-                // Upload complete
                 xhr.addEventListener('load', () => {
                     if (xhr.status === 200 || xhr.status === 204) {
                         progressFill.style.width = '100%';
-                        progressText.textContent = 'Upload complete! ✓';
-                        showStatus('✅ File uploaded successfully! Serina will receive it shortly.', 'success');
+                        progressText.textContent = 'Complete';
+                        showStatus('✅ Upload successful', 'success');
                         resetBtn.style.display = 'block';
                         uploadBtn.style.display = 'none';
                     } else {
-                        throw new Error(`Upload failed with status ${xhr.status}`);
+                        throw new Error(`Upload failed: ${xhr.status}`);
                     }
                 });
 
-                // Upload error
                 xhr.addEventListener('error', () => {
-                    throw new Error('Upload failed - network error');
+                    throw new Error('Upload failed');
                 });
 
-                // Upload timeout
                 xhr.addEventListener('timeout', () => {
-                    throw new Error('Upload timed out - link may have expired');
+                    throw new Error('Upload timed out');
                 });
 
-                // Start upload
                 xhr.open('PUT', uploadUrl, true);
                 xhr.setRequestHeader('Content-Type', selectedFile.type || 'application/octet-stream');
-                xhr.timeout = 300000; // 5 minute timeout
+                xhr.timeout = 300000;
                 xhr.send(selectedFile);
 
             } catch (error) {
                 console.error('Upload error:', error);
-                showStatus(`❌ Upload failed: ${error.message}`, 'error');
+                showStatus(`❌ ${error.message}`, 'error');
                 progressContainer.classList.remove('show');
                 uploadBtn.disabled = false;
                 uploadBtn.textContent = 'Try Again';
@@ -425,7 +403,6 @@
             }
         });
 
-        // Reset button
         resetBtn.addEventListener('click', () => {
             selectedFile = null;
             fileInput.value = '';
