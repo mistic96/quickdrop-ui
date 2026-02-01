@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuickDrop Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f7fafc;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #e6f0ff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #4a5568;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            color: #a0aec0;
+            font-size: 13px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 5px;
+            word-break: break-all;
+        }
+
+        .file-size {
+            color: #718096;
+            font-size: 13px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .progress-container {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .logo {
+                font-size: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">📤</div>
+        <h1>QuickDrop Upload</h1>
+        <p class="subtitle">Upload your file securely to Serina</p>
+
+        <div class="status-message" id="statusMessage"></div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Tap to choose file</div>
+            <div class="upload-hint">or drag and drop here</div>
+        </div>
+
+        <input type="file" id="fileInput" accept="*/*">
+
+        <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+        </div>
+
+        <button class="btn btn-primary" id="uploadBtn" disabled>Select a file first</button>
+        <button class="btn btn-secondary" id="resetBtn" style="display: none;">Upload Another File</button>
+
+        <div class="footer">
+            🔒 Encrypted end-to-end • Link expires in 3-5 minutes
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const statusMessage = document.getElementById('statusMessage');
+
+        let selectedFile = null;
+        let uploadUrl = null;
+
+        // Get presigned URL from query parameter
+        function getUploadUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('url');
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            uploadUrl = getUploadUrl();
+
+            if (!uploadUrl) {
+                showStatus('⚠️ No upload URL provided. Get a link from Serina first!', 'warning');
+                uploadBtn.disabled = true;
+                uploadArea.style.pointerEvents = 'none';
+                uploadArea.style.opacity = '0.5';
+            }
+        });
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message show status-${type}`;
+        }
+
+        // Hide status message
+        function hideStatus() {
+            statusMessage.className = 'status-message';
+        }
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => {
+            if (uploadUrl) {
+                fileInput.click();
+            }
+        });
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            if (uploadUrl && e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // File selection handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Handle selected file
+        function handleFile(file) {
+            selectedFile = file;
+            fileName.textContent = `📄 ${file.name}`;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.classList.add('show');
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = '📤 Upload File';
+            hideStatus();
+        }
+
+        // Upload button click
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile || !uploadUrl) return;
+
+            uploadBtn.disabled = true;
+            progressContainer.classList.add('show');
+            fileInfo.style.display = 'none';
+            uploadArea.style.display = 'none';
+
+            try {
+                const xhr = new XMLHttpRequest();
+
+                // Progress tracking
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressFill.style.width = percentComplete + '%';
+                        progressText.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+                    }
+                });
+
+                // Upload complete
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200 || xhr.status === 204) {
+                        progressFill.style.width = '100%';
+                        progressText.textContent = 'Upload complete! ✓';
+                        showStatus('✅ File uploaded successfully! Serina will receive it shortly.', 'success');
+                        resetBtn.style.display = 'block';
+                        uploadBtn.style.display = 'none';
+                    } else {
+                        throw new Error(`Upload failed with status ${xhr.status}`);
+                    }
+                });
+
+                // Upload error
+                xhr.addEventListener('error', () => {
+                    throw new Error('Upload failed - network error');
+                });
+
+                // Upload timeout
+                xhr.addEventListener('timeout', () => {
+                    throw new Error('Upload timed out - link may have expired');
+                });
+
+                // Start upload
+                xhr.open('PUT', uploadUrl, true);
+                xhr.setRequestHeader('Content-Type', selectedFile.type || 'application/octet-stream');
+                xhr.timeout = 300000; // 5 minute timeout
+                xhr.send(selectedFile);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus(`❌ Upload failed: ${error.message}`, 'error');
+                progressContainer.classList.remove('show');
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Try Again';
+                fileInfo.style.display = 'block';
+                uploadArea.style.display = 'block';
+            }
+        });
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('show');
+            progressContainer.classList.remove('show');
+            uploadBtn.style.display = 'block';
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Select a file first';
+            resetBtn.style.display = 'none';
+            uploadArea.style.display = 'block';
+            progressFill.style.width = '0%';
+            hideStatus();
+        });
+    </script>
+</body>
+</html>
