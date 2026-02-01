@@ -25,7 +25,7 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             padding: 40px 30px;
             text-align: center;
@@ -39,6 +39,12 @@
         h1 {
             color: #2d3748;
             font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
             margin-bottom: 30px;
         }
 
@@ -83,29 +89,65 @@
             display: none;
         }
 
-        .file-info {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
+        .files-list {
+            max-height: 300px;
+            overflow-y: auto;
             margin-bottom: 20px;
             display: none;
         }
 
-        .file-info.show {
+        .files-list.show {
             display: block;
         }
 
-        .file-name {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 5px;
-            word-break: break-all;
+        .file-item {
+            background: #f7fafc;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
         }
 
-        .file-size {
+        .file-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-item-name {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-item-size {
             color: #718096;
-            font-size: 13px;
+            font-size: 12px;
+        }
+
+        .file-item-status {
+            margin-left: 10px;
+            font-size: 20px;
+        }
+
+        .file-item-progress {
+            margin-top: 5px;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .file-item-progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
         .btn {
@@ -144,36 +186,6 @@
             background: #cbd5e0;
         }
 
-        .progress-container {
-            display: none;
-            margin-bottom: 20px;
-        }
-
-        .progress-container.show {
-            display: block;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            color: #718096;
-            font-size: 14px;
-        }
-
         .status-message {
             padding: 15px;
             border-radius: 10px;
@@ -209,6 +221,22 @@
             font-size: 12px;
         }
 
+        .overall-progress {
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .overall-progress.show {
+            display: block;
+        }
+
+        .overall-progress-text {
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 30px 20px;
@@ -228,31 +256,26 @@
     <div class="container">
         <div class="logo">📤</div>
         <h1>Secure File Upload</h1>
+        <div class="subtitle" id="subtitle">Select multiple files to upload</div>
 
         <div class="status-message" id="statusMessage"></div>
 
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📁</div>
-            <div class="upload-text">Tap to choose file</div>
-            <div class="upload-hint">or drag and drop here</div>
+            <div class="upload-text">Tap to choose files</div>
+            <div class="upload-hint">or drag and drop • Multiple files supported</div>
         </div>
 
-        <input type="file" id="fileInput" accept="*/*">
+        <input type="file" id="fileInput" accept="*/*" multiple>
 
-        <div class="file-info" id="fileInfo">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-size" id="fileSize"></div>
+        <div class="overall-progress" id="overallProgress">
+            <div class="overall-progress-text" id="overallProgressText">Uploading 0 of 0 files...</div>
         </div>
 
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-text" id="progressText">Uploading...</div>
-        </div>
+        <div class="files-list" id="filesList"></div>
 
-        <button class="btn btn-primary" id="uploadBtn" disabled>Select a file first</button>
-        <button class="btn btn-secondary" id="resetBtn" style="display: none;">Upload Another File</button>
+        <button class="btn btn-primary" id="uploadBtn" disabled>Select files first</button>
+        <button class="btn btn-secondary" id="resetBtn" style="display: none;">Upload More Files</button>
 
         <div class="footer">
             🔒 Secure encrypted upload
@@ -262,18 +285,17 @@
     <script>
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
-        const fileInfo = document.getElementById('fileInfo');
-        const fileName = document.getElementById('fileName');
-        const fileSize = document.getElementById('fileSize');
+        const filesList = document.getElementById('filesList');
         const uploadBtn = document.getElementById('uploadBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
         const statusMessage = document.getElementById('statusMessage');
+        const overallProgress = document.getElementById('overallProgress');
+        const overallProgressText = document.getElementById('overallProgressText');
+        const subtitle = document.getElementById('subtitle');
 
-        let selectedFile = null;
+        let selectedFiles = [];
         let uploadUrl = null;
+        let uploading = false;
 
         function getUploadUrl() {
             const params = new URLSearchParams(window.location.search);
@@ -288,6 +310,7 @@
                 uploadBtn.disabled = true;
                 uploadArea.style.pointerEvents = 'none';
                 uploadArea.style.opacity = '0.5';
+                subtitle.textContent = 'Invalid or missing upload link';
             }
         });
 
@@ -309,14 +332,16 @@
         }
 
         uploadArea.addEventListener('click', () => {
-            if (uploadUrl) {
+            if (uploadUrl && !uploading) {
                 fileInput.click();
             }
         });
 
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.classList.add('dragover');
+            if (!uploading) {
+                uploadArea.classList.add('dragover');
+            }
         });
 
         uploadArea.addEventListener('dragleave', () => {
@@ -327,93 +352,148 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
 
-            if (uploadUrl && e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
+            if (uploadUrl && !uploading && e.dataTransfer.files.length > 0) {
+                handleFiles(Array.from(e.dataTransfer.files));
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
+                handleFiles(Array.from(e.target.files));
             }
         });
 
-        function handleFile(file) {
-            selectedFile = file;
-            fileName.textContent = `📄 ${file.name}`;
-            fileSize.textContent = formatFileSize(file.size);
-            fileInfo.classList.add('show');
+        function handleFiles(files) {
+            selectedFiles = files.map(file => ({
+                file,
+                id: Math.random().toString(36).substr(2, 9),
+                status: 'pending',
+                progress: 0
+            }));
+
+            renderFilesList();
             uploadBtn.disabled = false;
-            uploadBtn.textContent = '📤 Upload File';
+            uploadBtn.textContent = `📤 Upload ${files.length} file${files.length > 1 ? 's' : ''}`;
             hideStatus();
         }
 
+        function renderFilesList() {
+            filesList.innerHTML = '';
+            filesList.classList.add('show');
+
+            selectedFiles.forEach(fileObj => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.id = `file-${fileObj.id}`;
+
+                const statusIcon = fileObj.status === 'completed' ? '✅' :
+                                 fileObj.status === 'error' ? '❌' :
+                                 fileObj.status === 'uploading' ? '⏳' : '📄';
+
+                item.innerHTML = `
+                    <div class="file-item-info">
+                        <div class="file-item-name">${fileObj.file.name}</div>
+                        <div class="file-item-size">${formatFileSize(fileObj.file.size)}</div>
+                        ${fileObj.status === 'uploading' ? '<div class="file-item-progress"><div class="file-item-progress-fill"></div></div>' : ''}
+                    </div>
+                    <div class="file-item-status">${statusIcon}</div>
+                `;
+
+                filesList.appendChild(item);
+            });
+        }
+
         uploadBtn.addEventListener('click', async () => {
-            if (!selectedFile || !uploadUrl) return;
+            if (!selectedFiles.length || !uploadUrl || uploading) return;
 
+            uploading = true;
             uploadBtn.disabled = true;
-            progressContainer.classList.add('show');
-            fileInfo.style.display = 'none';
             uploadArea.style.display = 'none';
+            overallProgress.classList.add('show');
 
-            try {
+            let completed = 0;
+            let failed = 0;
+
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const fileObj = selectedFiles[i];
+
+                overallProgressText.textContent = `Uploading ${i + 1} of ${selectedFiles.length} files...`;
+
+                try {
+                    await uploadFile(fileObj);
+                    completed++;
+                    fileObj.status = 'completed';
+                } catch (error) {
+                    console.error(`Failed to upload ${fileObj.file.name}:`, error);
+                    failed++;
+                    fileObj.status = 'error';
+                }
+
+                renderFilesList();
+            }
+
+            uploading = false;
+            overallProgress.classList.remove('show');
+
+            if (failed === 0) {
+                showStatus(`✅ All ${completed} file${completed > 1 ? 's' : ''} uploaded successfully!`, 'success');
+            } else if (completed === 0) {
+                showStatus(`❌ All uploads failed`, 'error');
+            } else {
+                showStatus(`⚠️ ${completed} succeeded, ${failed} failed`, 'warning');
+            }
+
+            resetBtn.style.display = 'block';
+            uploadBtn.style.display = 'none';
+        });
+
+        function uploadFile(fileObj) {
+            return new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
+
+                fileObj.status = 'uploading';
+                renderFilesList();
 
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
                         const percentComplete = (e.loaded / e.total) * 100;
-                        progressFill.style.width = percentComplete + '%';
-                        progressText.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+                        fileObj.progress = percentComplete;
+
+                        const progressFill = document.querySelector(`#file-${fileObj.id} .file-item-progress-fill`);
+                        if (progressFill) {
+                            progressFill.style.width = percentComplete + '%';
+                        }
                     }
                 });
 
                 xhr.addEventListener('load', () => {
                     if (xhr.status === 200 || xhr.status === 204) {
-                        progressFill.style.width = '100%';
-                        progressText.textContent = 'Complete';
-                        showStatus('✅ Upload successful', 'success');
-                        resetBtn.style.display = 'block';
-                        uploadBtn.style.display = 'none';
+                        resolve();
                     } else {
-                        throw new Error(`Upload failed: ${xhr.status}`);
+                        reject(new Error(`HTTP ${xhr.status}`));
                     }
                 });
 
-                xhr.addEventListener('error', () => {
-                    throw new Error('Upload failed');
-                });
-
-                xhr.addEventListener('timeout', () => {
-                    throw new Error('Upload timed out');
-                });
+                xhr.addEventListener('error', () => reject(new Error('Network error')));
+                xhr.addEventListener('timeout', () => reject(new Error('Timeout')));
 
                 xhr.open('PUT', uploadUrl, true);
-                xhr.setRequestHeader('Content-Type', selectedFile.type || 'application/octet-stream');
+                xhr.setRequestHeader('Content-Type', fileObj.file.type || 'application/octet-stream');
                 xhr.timeout = 300000;
-                xhr.send(selectedFile);
-
-            } catch (error) {
-                console.error('Upload error:', error);
-                showStatus(`❌ ${error.message}`, 'error');
-                progressContainer.classList.remove('show');
-                uploadBtn.disabled = false;
-                uploadBtn.textContent = 'Try Again';
-                fileInfo.style.display = 'block';
-                uploadArea.style.display = 'block';
-            }
-        });
+                xhr.send(fileObj.file);
+            });
+        }
 
         resetBtn.addEventListener('click', () => {
-            selectedFile = null;
+            selectedFiles = [];
             fileInput.value = '';
-            fileInfo.classList.remove('show');
-            progressContainer.classList.remove('show');
+            filesList.classList.remove('show');
+            filesList.innerHTML = '';
             uploadBtn.style.display = 'block';
             uploadBtn.disabled = true;
-            uploadBtn.textContent = 'Select a file first';
+            uploadBtn.textContent = 'Select files first';
             resetBtn.style.display = 'none';
             uploadArea.style.display = 'block';
-            progressFill.style.width = '0%';
             hideStatus();
         });
     </script>
